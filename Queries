@@ -1,4 +1,4 @@
-
+//This file is for all the queries we have for the CS488 project
 //Query 1: speed - gt 80, lt 5
 db.freeway_loopdata.aggregate([{$project: {
   _id: 0,
