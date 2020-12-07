@@ -1,0 +1,153 @@
+//Freeway_loopdata Validation
+{
+  $jsonSchema: {
+    required: [
+      '_id'
+    ],
+    properties: {
+      detectorid: {},
+      starttime: {},
+      volume: {
+        bsonType: 'int',
+        minimum: 1,
+        description: 'must be a integer that is larger than zero'
+      },
+      speed: {
+        bsonType: 'int',
+        minimum: 1,
+        description: 'must be a integer that is larger than zero'
+      },
+      occupancy: {
+        bsonType: 'int',
+        minimum: 1,
+        description: 'must be a integer that is larger than zero'
+      },
+      status: {
+        bsonType: 'int',
+        maximum: 3,
+        minimum: 0,
+        description: 'must be a integer that is less than 4'
+      },
+      dqflags: {
+        bsonType: 'int',
+        maximum: 0,
+        minimum: 0,
+        description: 'must be a integer that is less than 1'
+      }
+    }
+  }
+}
+
+//Highway Validation
+{
+  $jsonSchema: {
+    required: [
+      'highwayid',
+      'shortdirection',
+      'direction',
+      'highwayname'
+    ],
+    properties: {
+      highwayid: {
+        bsonType: 'int',
+        minimum: 1,
+        description: 'Must be a integer greater than 0'
+      },
+      shortdirection: {
+        bsonType: 'string'
+      },
+      direction: {
+        bsonType: 'string'
+      },
+      highwayname: {
+        bsonType: 'string'
+      }
+    }
+  }
+}
+
+//Station_detectors
+{
+  $jsonSchema: {
+    required: [
+      'stationid',
+      'highwayid',
+      'milepost',
+      'locationtext',
+      'upstream',
+      'downstream',
+      'stationclass',
+      'numberlanes',
+      'latlon',
+      'length',
+      'detectors'
+    ],
+    properties: {
+      stationid: {
+        bsonType: 'int',
+        uniqueItems: true,
+        minimum: 1,
+        description: 'Must be a unique integer that is larger than 0'
+      },
+      highwayid: {
+        bsonType: 'int',
+        minimum: 1,
+        description: 'Must be a integer that is larger than 0'
+      },
+      milepost: {
+        bsonType: 'double',
+        minimum: 1,
+        description: 'Must be a double that is larger than 0'
+      },
+      locationtext: {
+        bsonType: 'string',
+        description: 'must be a string'
+      },
+      upstream: {
+        bsonType: 'int',
+        description: 'Must be a integer'
+      },
+      downstream: {
+        bsonType: 'int',
+        description: 'Must be a integer'
+      },
+      stationclass: {
+        bsonType: 'int',
+        description: 'Must be a integer'
+      },
+      numberlanes: {
+        bsonType: 'int',
+        description: 'Must be a integer'
+      },
+      latlon: {},
+      length: {
+        bsonType: 'double',
+        minimum: 0,
+        description: 'Must be a double larger than 0'
+      },
+      detectors: {
+        required: [
+          'detectors.detectorid',
+          'detectors.detectorclass',
+          'detectors.lanenumber'
+        ],
+        properties: {
+          detectorid: {
+            bsonType: 'int'
+          },
+          detectorclass: {
+            bsonType: 'int'
+          },
+          lanenumber: {
+            'enum': [
+              1,
+              2,
+              3,
+              4
+            ]
+          }
+        }
+      }
+    }
+  }
+}
