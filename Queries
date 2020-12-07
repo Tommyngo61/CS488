@@ -1,0 +1,191 @@
+//Total Volume - Sept. 15, Foster NB
+db.stations_detectors.aggregate([{$match: {
+  locationtext: "Foster NB"
+}}, {$lookup: {
+  from: 'freeway_loopdata',
+  localField: 'detectors.detectorid',
+  foreignField: '_id.detectorid',
+  as: 'detector_loopdata'
+}}, {$unwind: "$detector_loopdata"}, {$match: {
+  "detector_loopdata._id.interval": {$gte: ISODate('2011-09-15T00:00:00.000Z'), $lt: ISODate('2011-09-16T00:00:00.000Z')}
+}}, {$group: {
+  _id: null,
+  totalvolume: {
+    $sum: "$detector_loopdata.totalVolume"}
+}}, {$project: {
+  _id: 0,
+  totalvolume: 1
+}}])
+
+
+//Travel Time - Sept. 15, 5 min intervals, Foster NB
+db.stations_detectors.aggregate([{$match: {
+  locationtext: "Foster NB"
+}}, {$lookup: {
+  from: 'freeway_loopdata',
+  localField: 'detectors.detectorid',
+  foreignField: '_id.detectorid',
+  as: 'detector_loopdata'
+}}, {$unwind:  "$detector_loopdata"}, {$match: {
+  'detector_loopdata._id.interval': {$gte: ISODate('2011-09-15T00:00:00.000Z'), $lt: ISODate('2011-09-16T00:00:00.000Z')}
+}}, {$project: {
+  _id: 0,
+  "detector_loopdata._id.interval": 1,
+  traveltime: {$multiply: 
+    [{$divide: ["$length", "$detector_loopdata.avgSpeed"]}, 3600]}
+}}])
+
+//speed - gt 80, lt 5
+db.freeway_loopdata.aggregate([{$project: {
+  _id: 0,
+  "loopdata.speed": 1
+}}, {$unwind: "$loopdata"}, {$match: {
+$or: [{"loopdata.speed": {$gt: 80}}, {"loopdata.speed": {$lt: 5}}]
+}}, {$count: 'count'}])
+
+
+
+
+
+//Speeds greater than 80, less than 5 - Question 1
+
+gb.freeway_loopdata.aggregate([{$project: {
+_id: 0,
+speed: 1
+}}, {$match: {
+$or: [{speed: {$gte: 80}}, {speed: {$lte: 5}}]
+}}, {$count: 'speed'}])
+//FosterNB Total Volume on Sept 15 - Question 2
+
+db.Freeway_stations_detectors.aggregate([{$match: {
+  locationtext: "Foster NB"
+}}, {$lookup: {
+  from: 'freeway_loopdata',
+  localField: 'detectors.detectorid',
+  foreignField: 'detectorid',
+  as: 'loopdata'
+}}, {$unwind: "$loopdata"}, {$match: {
+  "loopdata.starttime": {$gte: ISODate('2011-09-15T00:00:00.000Z'), $lt: ISODate('2011-09-16T00:00:00.000Z')}
+}}, {$group: {
+  _id: null,
+  totalvolume: { $sum: "$loopdata.volume"}
+}}])
+
+
+//Travel Time - Foster NB 5 min intervals - Question 3
+
+db.Freeway_stations_detectors.aggregate([{$match: {
+  locationtext: "Foster NB"
+}}, {$lookup: {
+  from: 'freeway_loopdata',
+  localField: 'detectors.detectorid',
+  foreignField: 'detectorid',
+  as: 'loopdata'
+}}, {$unwind: "$loopdata"}, {$match: {
+  'loopdata.starttime': {$gte: ISODate('2011-09-15T00:00:00.000Z'), $lt: ISODate('2011-09-16T00:00:00.000Z')}
+}}, {$group: {
+ _id: {
+   $toDate: {
+        $subtract: [
+          { $toLong: "$loopdata.starttime" },
+          { $mod: [ { "$toLong": "$loopdata.starttime" }, 1000 * 60 * 5 ] }
+        ]}
+   },
+  avglength: {$avg: "$length"},
+  avgspeed: {$avg: "$loopdata.speed"}  
+}}, {$project: {
+  traveltime: {$multiply: 
+    [{$divide: ["$avglength", "$avgspeed"]}, 3600]}
+}}, {$sort: {
+ _id: 1
+}}])
+
+//Peak Period Travel Times: Find the average travel time for 7-9AM and 4-6PM on September 22, 2011 for the I-205 NB freeway. Report travel time in minutes - Question 4
+//Route Finding: Find a route from Johnson Creek to Columbia Blvd on I-205 NB using the upstream and downstream fields - Question 5
+
+
+//Change the milepost Foster NB station to 22.6. - Question 6
+db.Freeway_stations_detectors.update({'locationtext': 'Foster NB'},{$set:{milepost:22.6}})
+
+
+//subtract 7 hours from date
+
+db.freeway_loopdata.updateMany({},[{$set: {
+  starttime: { $add: ["$starttime", -1000*60*60*7]}
+}}])
+
+//Validator
+db.loopdata.remove( {
+   $nor: [ {
+  $jsonSchema: {
+    required: [
+      'detectorid',
+      'starttime',
+      'volume',
+      'speed',
+      'occupancy',
+      'status',
+      'dqflags'
+    ],
+    properties: {
+      detectorid: {},
+      starttime: {},
+      volume: {
+        bsonType: 'int',
+        minimum: 1,
+        description: 'must be a integer that is larger than zero'},
+      speed: {
+        bsonType: 'int',
+        minimum: 1,
+        description: 'must be a integer that is larger than zero'},
+      occupancy: {
+        bsonType: 'int',
+        minimum: 1,
+        description: 'must be a integer that is larger than zero'},
+      status: {
+        bsonType: 'int',
+        maximum: 3,
+        minimum: 0,
+        description: 'must be a integer that is less than 4'},
+      dqflags: {
+        bsonType: 'int',
+        maximum: 0,
+        minimum: 0,
+        description: 'must be a integer that is less than 1'}
+    }
+  }
+}]
+})
+
+
+//validator for compass
+{
+  $jsonSchema: {
+    required: [
+      'detectorid',
+      'starttime',
+      'volume',
+      'speed',
+      'occupancy',
+      'status',
+      'dqflags'
+    ],
+    properties: {
+      detectorid: {
+        bsonType: 'int',
+        minimum: 1,
+        description: 'must be a interger that is larger than zero'
+      },
+      starttime: {},
+      volume: {},
+      speed: {
+        bsonType: 'int',
+        minimum: 1,
+        description: 'must be a integer that is larger than zero'
+      },
+      occupancy: {},
+      status: {},
+      dqflags: {}
+    }
+  }
+}
