@@ -35,10 +35,18 @@ dqflags: "$dq flags"
 }}])
 
 //Freeway_loopdata Validation
-{
+
+db.loopdata.remove( {
+   $nor: [ {
   $jsonSchema: {
     required: [
-      '_id'
+      'detectorid',
+      'starttime',
+      'volume',
+      'speed',
+      'occupancy',
+      'status',
+      'dqflags'
     ],
     properties: {
       detectorid: {},
@@ -46,33 +54,30 @@ dqflags: "$dq flags"
       volume: {
         bsonType: 'int',
         minimum: 1,
-        description: 'must be a integer that is larger than zero'
-      },
+        description: 'must be a integer that is larger than zero'},
       speed: {
         bsonType: 'int',
         minimum: 1,
-        description: 'must be a integer that is larger than zero'
-      },
+        description: 'must be a integer that is larger than zero'},
       occupancy: {
         bsonType: 'int',
         minimum: 1,
-        description: 'must be a integer that is larger than zero'
-      },
+        description: 'must be a integer that is larger than zero'},
       status: {
         bsonType: 'int',
         maximum: 3,
         minimum: 0,
-        description: 'must be a integer that is less than 4'
-      },
+        description: 'must be a integer that is less than 4'},
       dqflags: {
         bsonType: 'int',
         maximum: 0,
         minimum: 0,
-        description: 'must be a integer that is less than 1'
-      }
+        description: 'must be a integer that is less than 1'}
     }
   }
-}
+}]
+})
+
 
 //Highway Validation
 {
