@@ -44,43 +44,6 @@ db.stations_detectors.aggregate([{$match: {
   traveltime: {$multiply: 
     [{$divide: ["$length", "$detector_loopdata.avgSpeed"]}, 3600]}
 }}])
-//Query 6: Change the milepost Foster NB station to 22.6. - Question 6
-db.Freeway_stations_detectors.update({'locationtext': 'Foster NB'},{$set:{milepost:22.6}})
-
-//”script” for transforming the freeway loopdata to data model
-db.freeway_loopdata.updateMany({},[{$project: {
-_id: "$_id",
-detectorid: "$detectorid",
-starttime: "$starttime",
-volume: "$volume",
-speed: "$speed",
-occupancy: "$occupancy",
-status: "$status",
-dqflags: "$dq flags"
-}}, {$group: {
-   _id: {
-   detectorid: {$first: "$detectorid"},
-   interval: {$toDate: {
-        $subtract: [
-          { $toLong: "$starttime" },
-          { $mod: [ { "$toLong": "$starttime" }, 1000 * 60 * 5 ] }
-        ]}}
-
-       },
-
-  loopdata: {
-    $push: {starttime: "$starttime",
-            volume: "$volume",
-            speed: "$speed",
-            occupancy: "$occupancy",
-            status: "$status",
-            dqflags: "$dqflags"
-    }
-  }
-}}, {$sort: {
-  "_id.detectorid": 1,
-  "_id.interval": 1
-}}])
 
 //Query 5
 db.stations_detectors.aggregate([
