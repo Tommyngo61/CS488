@@ -82,4 +82,25 @@ dqflags: "$dq flags"
   "_id.interval": 1
 }}])
 
+//Query 5
+db.stations_detectors.aggregate([
+{$match: { highwayid:3}}, 
+{$graphLookup: {from: 'stations_detectors',
+  startWith: "$downstream", connectFromField: 'downstream', connectToField: 'stationid',as: 'path',
+  depthField: 'string',}}, 
+{$match: {  locationtext: "Johnson Cr NB"}},
+{$unwind: { path: "$path",}},
+ {$unwind: "$path"}, 
+{$sort: {"path.milepost": 1}}, 
+{$project: {  _id:0, "path.locationtext": 1
+}}])
+
+//Query 6
+db.Freeway_stations_detectors.update(
+{
+    'locationtext': 'Foster NB'
+},
+{
+    $set: {milepost:22.6}
+})
 
